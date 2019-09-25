@@ -47,31 +47,11 @@ namespace ToDo
 
                         DateTime dueDate = DateTime.Parse(Console.ReadLine());
 
-                        Task newToDo = new Task(idCounter, title, dueDate);
-
-                        toDo[toDoCounter] = newToDo;
-
-                        ++toDoCounter;
-                        ++idCounter;
+                        toDo[toDoCounter++] = new Task(idCounter++, title, dueDate);
 
                         break;
 
-                    case ConsoleKey.D2:
-                    case ConsoleKey.NumPad2:
 
-                        Console.WriteLine("Id\tTitle\t\t\tDueDate");
-                        Console.WriteLine("---------------------------------------------------------");
-
-                        for (int i = 0; i < toDo.Length; i++)
-                        {
-                            if (toDo[i] == null) continue;
-
-                            Console.WriteLine($"{toDo[i].id}\t{toDo[i].title}\t\t\t{toDo[i].dueDate}");
-                        }
-
-                        Console.ReadLine();
-
-                        break;
 
                     case ConsoleKey.D3:
                     case ConsoleKey.NumPad3:
