@@ -1,25 +1,22 @@
-﻿using System;
+﻿using Microsoft.Data.SqlClient;
+using System;
+using System.Collections.Generic;
 
 namespace ToDo
 {
     class Program
     {
+        static string connectionString = "Data Source=(local);Initial Catalog=ToDo;Integrated Security=true";
+
         static void Main(string[] args)
         {
-
             bool shouldNotExit = true;
-
-            Task[] toDo = new Task[20];
-
-            int toDoCounter = 0;
-
-            int idCounter = 1;
 
             while (shouldNotExit)
             {
 
                 Console.WriteLine("1. Add todo");
-                Console.WriteLine("2. Lis todo");
+                Console.WriteLine("2. List todo");
                 Console.WriteLine("3. Exit");
 
                 ConsoleKeyInfo keyPressed = Console.ReadKey(true);
@@ -47,7 +44,26 @@ namespace ToDo
 
                         DateTime dueDate = DateTime.Parse(Console.ReadLine());
 
-                        toDo[toDoCounter++] = new Task(idCounter++, title, dueDate);
+                        CreateTask(title, dueDate);
+
+                        break;
+
+                    case ConsoleKey.D2:
+                    case ConsoleKey.NumPad2:
+
+                        List<Task> taskList = FetchAllTasks();
+
+                        Console.WriteLine("Id\tTitle\t\t\tDueDate");
+                        Console.WriteLine("---------------------------------------------------------------");
+
+                        foreach (Task task in taskList)
+                        {
+                            if (task == null) continue;
+
+                            Console.WriteLine($"{task.id}\t{task.title} {task.dueDate}");
+                        }
+
+                        Console.ReadKey();
 
                         break;
 
@@ -66,8 +82,70 @@ namespace ToDo
 
 
         }
-    }
 
+        static void CreateTask(string title, DateTime dueDate)
+        {
+            string queryString = @"INSERT INTO Task (Title, DueDate)
+                                              VALUES(@Title, @DueDate)";
+
+            using(SqlConnection connection = new SqlConnection(connectionString))
+            {
+                SqlCommand command = new SqlCommand(queryString, connection);
+
+                command.Parameters.AddWithValue("@Title", title);
+                command.Parameters.AddWithValue("@DueDate", dueDate);
+
+                connection.Open();
+
+                command.ExecuteNonQuery();
+
+                connection.Close();
+
+            }
+        }
+
+        static List<Task> FetchAllTasks()
+        {
+            string queryString = @"SELECT [Id],
+                                          [Title],
+                                          [DueDate]
+                                     FROM[ToDo].[dbo].[Task]";
+
+            List<Task> taskList = new List<Task>();
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                SqlCommand command = new SqlCommand(queryString, connection);
+
+                try
+                {
+                    connection.Open();
+
+                    SqlDataReader reader = command.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        int id = int.Parse(reader["Id"].ToString()); ;
+                        string title = reader["Title"].ToString(); ;
+                        DateTime dueDate = DateTime.Parse(reader["dueDate"].ToString());
+
+                        Task task = new Task(id, title, dueDate);
+
+                        taskList.Add(task);
+                    }
+
+                    reader.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+
+            return taskList;
+
+        }
+    }
     class Task
     {
         public int id;
